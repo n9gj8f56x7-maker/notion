@@ -130,3 +130,11 @@ button:focus {
 .inc-arrow {
   margin-right: 12px;
 }
+
+html::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: #191919;
+  z-index: -9999;
+}
