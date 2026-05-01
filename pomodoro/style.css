@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@600&display=swap');
 
+/* ===== Background fix for Notion ===== */
 html,
 body {
   margin: 0;
@@ -11,6 +12,16 @@ body {
   overflow: hidden;
 }
 
+/* Force dark fill in iframe (Notion fix) */
+html::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: #191919;
+  z-index: -9999;
+}
+
+/* Center widget */
 body {
   display: flex;
   align-items: center;
@@ -23,17 +34,15 @@ body {
   justify-content: center;
   width: 100%;
   min-height: 100vh;
-  background: #191919 !important;
 }
 
-/* Buttons */
-
+/* ===== Buttons ===== */
 button,
 button:active {
   background-color: rgb(234, 178, 156);
   border: none;
-  width: 42px;
-  height: 40px;
+  width: clamp(32px, 8vw, 42px);
+  height: clamp(30px, 8vw, 40px);
   border-radius: 100%;
   text-align: center;
   box-shadow: 0.2em 0.2em rgb(194, 91, 44);
@@ -48,24 +57,23 @@ button:focus {
   -moz-box-shadow: 0.2em 0.2em rgb(194, 91, 44) inset;
 }
 
-/* Clock Body */
-
+/* ===== Clock Body (responsive now) ===== */
 .clock-container {
   background-color: rgb(240, 240, 190);
-  width: 350px;
+  width: 90vw;            /* responsive */
+  max-width: 350px;       /* original max size */
   border-radius: 20px;
-  padding: 30px;
+  padding: clamp(16px, 4vw, 30px);
   box-shadow: 10px 10px sienna;
   margin: 0 auto;
 }
 
-/* Display + Stop/Start/Reset Controls */
-
+/* ===== Timer Display ===== */
 #time-left {
-  font-size: 70px;
+  font-size: clamp(32px, 10vw, 70px);
   text-align: center;
   background-color: rgb(150, 180, 175);
-  padding: 20px;
+  padding: clamp(12px, 3vw, 20px);
   border-radius: 20px;
   box-shadow: 3px 3px rgb(121, 145, 141) inset;
 }
@@ -79,7 +87,7 @@ button:focus {
 }
 
 #timer-label {
-  font-size: 25px;
+  font-size: clamp(14px, 3vw, 25px);
   text-align: center;
   padding-top: 2px;
   background-color: rgb(150, 180, 175);
@@ -91,17 +99,17 @@ button:focus {
 
 #timer-ssr {
   flex: 1;
-  margin-left: 30px;
+  margin-left: 20px;
   display: flex;
   justify-content: space-between;
 }
 
-/* Timer Length Controls */
-
+/* ===== Length Controls ===== */
 .length-container {
   margin-top: 20px;
   display: flex;
   flex-direction: row;
+  gap: 10px;
 }
 
 .inc-dec-btn-container {
@@ -109,7 +117,8 @@ button:focus {
   display: flex;
   flex-direction: row;
   justify-content: center;
-  width: 140px;
+  width: 100%;
+  max-width: 140px;
   height: 60px;
 }
 
@@ -117,24 +126,16 @@ button:focus {
 .session-container {
   text-align: center;
   border: 2px solid rgb(234, 178, 156);
-  padding: 10px;
+  padding: clamp(8px, 2vw, 10px);
   border-radius: 10px;
   width: 48%;
 }
 
 .timer-length {
-  font-size: 2em;
+  font-size: clamp(16px, 4vw, 2em);
 }
 
 .break-container,
 .inc-arrow {
   margin-right: 12px;
-}
-
-html::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  background: #191919;
-  z-index: -9999;
 }
