@@ -1,0 +1,476 @@
+Icd10 tracker · HTML
+Copy
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Rotation ICD-10 Tracker</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap');
+ 
+  :root {
+    --bg: #191919;
+    --surface: #242424;
+    --surface2: #2e2040;
+    --border: #3a2f52;
+    --accent: #c77dff;
+    --accent2: #e040fb;
+    --accent3: #f72585;
+    --text: #f0e6ff;
+    --text-muted: #c4aee0;
+    --text-dim: #6b5a80;
+    --tag-bg: #3a1a4a;
+    --tag-border: #8b3fa8;
+  }
+ 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Sora', sans-serif;
+    min-height: 100vh;
+    padding: 24px 16px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+ 
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
+  .logo {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, #9b5de5, #f72585);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .header-text h1 { font-size: 18px; font-weight: 700; }
+  .header-text p { font-size: 11px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+ 
+  .date-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 16px;
+    margin-bottom: 22px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .date-bar strong { color: var(--accent); }
+  .pt-count {
+    background: #3a1a4a; border: 1px solid #8b3fa8;
+    color: var(--accent2); border-radius: 20px; padding: 2px 10px;
+    font-size: 11px; font-weight: 600;
+  }
+ 
+  .section-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;
+  }
+ 
+  .search-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; margin-bottom: 20px;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus-within { border-color: var(--accent2); }
+ 
+  .search-row { display: flex; gap: 8px; align-items: center; }
+ 
+  .diagnosis-input {
+    flex: 1;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px;
+    color: var(--text); font-family: 'Sora', sans-serif;
+    font-size: 14px; outline: none; transition: border-color 0.2s;
+  }
+  .diagnosis-input::placeholder { color: var(--text-dim); }
+  .diagnosis-input:focus { border-color: var(--accent2); }
+ 
+  .lookup-btn {
+    background: var(--accent2); color: #ffffff; border: none;
+    border-radius: 8px; padding: 10px 16px;
+    font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; transition: opacity 0.2s;
+  }
+  .lookup-btn:hover { opacity: 0.85; }
+  .lookup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+ 
+  .results-area { margin-top: 12px; }
+ 
+  .result-item {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 12px; margin-bottom: 6px;
+    cursor: pointer; transition: border-color 0.15s, background 0.15s;
+  }
+  .result-item:hover { border-color: var(--accent); background: #2e2040; }
+  .result-code {
+    font-family: 'DM Mono', monospace; font-size: 13px;
+    color: var(--accent); font-weight: 500; min-width: 68px;
+  }
+  .result-desc { flex: 1; font-size: 13px; color: var(--text); line-height: 1.4; }
+  .add-btn {
+    background: none; border: 1px solid var(--accent); color: var(--accent);
+    border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; transition: background 0.15s;
+  }
+  .add-btn:hover { background: var(--tag-bg); }
+ 
+  .spinner {
+    text-align: center; padding: 16px; color: var(--text-muted);
+    font-size: 13px; font-family: 'DM Mono', monospace;
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
+  .no-results { text-align: center; padding: 16px; color: var(--text-muted); font-size: 13px; }
+ 
+  .patient-form {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 16px; margin-bottom: 20px;
+  }
+  .form-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .field-group { flex: 1; }
+  .field-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 1px;
+    text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px;
+  }
+  .field-input {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 12px; color: var(--text);
+    font-family: 'Sora', sans-serif; font-size: 13px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .field-input:focus { border-color: var(--accent2); }
+  .field-input::placeholder { color: var(--text-dim); }
+ 
+  .selected-codes {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    min-height: 36px; margin-bottom: 10px; align-items: center;
+  }
+  .code-tag {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--tag-bg); border: 1px solid var(--tag-border);
+    border-radius: 6px; padding: 4px 10px;
+    font-family: 'DM Mono', monospace; font-size: 12px; color: var(--accent);
+    animation: tagIn 0.15s ease;
+  }
+  @keyframes tagIn { from{opacity:0;transform:scale(0.9)} to{opacity:1;transform:scale(1)} }
+  .code-tag-remove {
+    background: none; border: none; color: var(--accent3);
+    cursor: pointer; font-size: 14px; line-height: 1; padding: 0;
+  }
+ 
+  .add-patient-btn {
+    width: 100%;
+    background: linear-gradient(90deg, #9b5de5 0%, #f72585 100%);
+    color: #ffffff; border: none; border-radius: 8px; padding: 11px;
+    font-family: 'Sora', sans-serif; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: opacity 0.2s;
+  }
+  .add-patient-btn:hover { opacity: 0.88; }
+ 
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+ 
+  .patient-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px; margin-bottom: 10px;
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+ 
+  .patient-card-header {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 8px;
+    margin-bottom: 8px;
+  }
+  .patient-name { font-size: 14px; font-weight: 600; }
+  .patient-meta { font-size: 11px; font-family: 'DM Mono', monospace; color: var(--text-muted); margin-top: 1px; }
+  .delete-card-btn {
+    background: none; border: none; color: var(--text-dim);
+    cursor: pointer; font-size: 16px; transition: color 0.15s;
+  }
+  .delete-card-btn:hover { color: var(--accent3); }
+ 
+  .card-codes { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px; }
+  .card-code-tag {
+    background: var(--tag-bg); border: 1px solid var(--tag-border);
+    border-radius: 5px; padding: 2px 8px;
+    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent);
+  }
+  .card-descs { font-size: 11px; color: var(--text-muted); font-family: 'DM Mono', monospace; line-height: 1.5; }
+  .card-notes { font-size: 12px; color: var(--text-muted); line-height: 1.4; font-style: italic; margin-top: 6px; }
+ 
+  .export-bar { display: flex; gap: 8px; margin-top: 20px; }
+  .export-btn {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px; color: var(--text-muted);
+    font-family: 'Sora', sans-serif; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: border-color 0.15s, color 0.15s;
+  }
+  .export-btn:hover { border-color: var(--accent2); color: var(--accent2); }
+ 
+  .empty-state {
+    text-align: center; padding: 30px 20px; color: var(--text-dim);
+    font-size: 13px; line-height: 1.6;
+    border: 1px dashed var(--border); border-radius: 10px;
+  }
+  .empty-state .icon { font-size: 28px; margin-bottom: 8px; }
+ 
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: var(--accent); color: #ffffff;
+    font-size: 13px; font-weight: 600;
+    padding: 10px 20px; border-radius: 20px;
+    opacity: 0; transition: opacity 0.2s;
+    pointer-events: none; z-index: 999;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+ 
+<header>
+  <div class="logo">🩺</div>
+  <div class="header-text">
+    <h1>Rotation ICD-10 Tracker</h1>
+    <p>Daily patient &amp; diagnosis log</p>
+  </div>
+</header>
+ 
+<div class="date-bar">
+  <span>📅 <strong id="todayDate"></strong></span>
+  <span class="pt-count" id="ptCount">0 patients</span>
+</div>
+ 
+<div class="section-label">① Look Up Diagnosis → ICD-10 Code</div>
+<div class="search-box">
+  <div class="search-row">
+    <input class="diagnosis-input" id="diagInput" placeholder="Type a diagnosis (e.g. pneumonia, Type 2 diabetes, UTI…)" autocomplete="off"/>
+    <button class="lookup-btn" id="lookupBtn" onclick="lookupDiagnosis()">Look Up</button>
+  </div>
+  <div class="results-area" id="resultsArea"></div>
+</div>
+ 
+<div class="section-label">② Log Patient</div>
+<div class="patient-form">
+  <div class="form-row">
+    <div class="field-group">
+      <div class="field-label">Patient ID / Initials</div>
+      <input class="field-input" id="patientId" placeholder="e.g. PT-01 or J.D."/>
+    </div>
+    <div class="field-group">
+      <div class="field-label">Room / Location</div>
+      <input class="field-input" id="patientRoom" placeholder="e.g. 3B, ICU-2"/>
+    </div>
+  </div>
+ 
+  <div class="field-label" style="margin-bottom:6px;">Selected ICD-10 Codes <span style="color:var(--text-dim);font-weight:400;font-size:10px;">(click codes above to add)</span></div>
+  <div class="selected-codes" id="selectedCodes">
+    <span style="color:var(--text-dim);font-size:12px;">No codes selected yet…</span>
+  </div>
+ 
+  <div class="field-label" style="margin-bottom:4px;">Notes (optional)</div>
+  <input class="field-input" id="patientNotes" placeholder="e.g. admitted 2 days ago, started on IV antibiotics" style="margin-bottom:10px;"/>
+ 
+  <button class="add-patient-btn" onclick="addPatient()">+ Log This Patient</button>
+</div>
+ 
+<hr class="divider"/>
+<div class="section-label">③ Today's Patient Log</div>
+<div id="patientLog">
+  <div class="empty-state">
+    <div class="icon">📋</div>
+    No patients logged yet.<br/>Search a diagnosis above, select codes, then log a patient.
+  </div>
+</div>
+ 
+<div class="export-bar">
+  <button class="export-btn" onclick="copyForConcert()">📋 Copy for Project Concert</button>
+  <button class="export-btn" onclick="exportCSV()">⬇ Download CSV</button>
+</div>
+ 
+<div class="toast" id="toast"></div>
+ 
+<script>
+  const API_URL = "https://api.anthropic.com/v1/messages";
+  let selectedCodes = [];
+  let patients = [];
+ 
+  const today = new Date();
+  document.getElementById('todayDate').textContent = today.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric', year:'numeric'});
+ 
+  document.getElementById('diagInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') lookupDiagnosis();
+  });
+ 
+  async function lookupDiagnosis() {
+    const query = document.getElementById('diagInput').value.trim();
+    if (!query) return;
+    const btn = document.getElementById('lookupBtn');
+    const area = document.getElementById('resultsArea');
+    btn.disabled = true;
+    btn.textContent = 'Looking up…';
+    area.innerHTML = '<div class="spinner">Searching ICD-10 database…</div>';
+ 
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: `You are an ICD-10-CM coding assistant for a medical student on clinical rotations. Given a diagnosis or clinical description, return the most relevant ICD-10-CM codes.
+ 
+Respond ONLY with a valid JSON array, no markdown formatting, no extra text, no backticks. Format exactly:
+[{"code":"X00.0","desc":"Full ICD-10 description"},{"code":"X00.1","desc":"Another description"}]
+ 
+Include 4-6 of the most relevant codes, ordered from most specific/common to less common. For broad terms, include the most common specific variants.
+ 
+Diagnosis: "${query}"`
+          }]
+        })
+      });
+      const data = await res.json();
+      const text = data.content.map(i => i.text || '').join('');
+      const clean = text.replace(/```json|```/g, '').trim();
+      const codes = JSON.parse(clean);
+ 
+      if (!codes || !codes.length) {
+        area.innerHTML = '<div class="no-results">No codes found. Try a different search term.</div>';
+      } else {
+        area.innerHTML = codes.map(c => `
+          <div class="result-item" onclick='addCode(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
+            <span class="result-code">${c.code}</span>
+            <span class="result-desc">${c.desc}</span>
+            <button class="add-btn">+ Add</button>
+          </div>
+        `).join('');
+      }
+    } catch(e) {
+      area.innerHTML = '<div class="no-results">⚠️ Lookup failed. Please try again.</div>';
+    }
+ 
+    btn.disabled = false;
+    btn.textContent = 'Look Up';
+  }
+ 
+  function addCode(c) {
+    if (selectedCodes.find(s => s.code === c.code)) { showToast('Code already added'); return; }
+    selectedCodes.push(c);
+    renderSelectedCodes();
+    showToast('Added ' + c.code);
+  }
+ 
+  function removeCode(code) {
+    selectedCodes = selectedCodes.filter(c => c.code !== code);
+    renderSelectedCodes();
+  }
+ 
+  function renderSelectedCodes() {
+    const el = document.getElementById('selectedCodes');
+    if (!selectedCodes.length) {
+      el.innerHTML = '<span style="color:var(--text-dim);font-size:12px;">No codes selected yet…</span>';
+    } else {
+      el.innerHTML = selectedCodes.map(c => `
+        <div class="code-tag">
+          ${c.code}
+          <button class="code-tag-remove" onclick="removeCode('${c.code}')">×</button>
+        </div>
+      `).join('');
+    }
+  }
+ 
+  function addPatient() {
+    if (!selectedCodes.length) { showToast('⚠️ Select at least one ICD-10 code first'); return; }
+    const id = document.getElementById('patientId').value.trim() || ('PT-' + (patients.length + 1));
+    const room = document.getElementById('patientRoom').value.trim();
+    const notes = document.getElementById('patientNotes').value.trim();
+    patients.push({
+      id, room, notes,
+      codes: [...selectedCodes],
+      time: new Date().toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})
+    });
+    document.getElementById('patientId').value = '';
+    document.getElementById('patientRoom').value = '';
+    document.getElementById('patientNotes').value = '';
+    document.getElementById('diagInput').value = '';
+    document.getElementById('resultsArea').innerHTML = '';
+    selectedCodes = [];
+    renderSelectedCodes();
+    renderLog();
+    showToast('✓ ' + id + ' logged!');
+  }
+ 
+  function deletePatient(i) {
+    if (!confirm('Remove this patient from the log?')) return;
+    patients.splice(i, 1);
+    renderLog();
+  }
+ 
+  function renderLog() {
+    const log = document.getElementById('patientLog');
+    document.getElementById('ptCount').textContent = patients.length + ' patient' + (patients.length === 1 ? '' : 's');
+    if (!patients.length) {
+      log.innerHTML = '<div class="empty-state"><div class="icon">📋</div>No patients logged yet.<br/>Search a diagnosis above, select codes, then log a patient.</div>';
+      return;
+    }
+    log.innerHTML = patients.map((p, i) => `
+      <div class="patient-card">
+        <div class="patient-card-header">
+          <div>
+            <div class="patient-name">${p.id}${p.room ? ' — ' + p.room : ''}</div>
+            <div class="patient-meta">Logged at ${p.time} · ${p.codes.length} code${p.codes.length===1?'':'s'}</div>
+          </div>
+          <button class="delete-card-btn" onclick="deletePatient(${i})">🗑</button>
+        </div>
+        <div class="card-codes">${p.codes.map(c => `<span class="card-code-tag" title="${c.desc}">${c.code}</span>`).join('')}</div>
+        <div class="card-descs">${p.codes.map(c => c.code + ' – ' + c.desc).join('<br/>')}</div>
+        ${p.notes ? '<div class="card-notes">📝 ' + p.notes + '</div>' : ''}
+      </div>
+    `).join('');
+  }
+ 
+  function copyForConcert() {
+    if (!patients.length) { showToast('No patients to copy'); return; }
+    const dateStr = today.toLocaleDateString('en-US');
+    let text = 'ROTATION LOG — ' + dateStr + '\n' + '─'.repeat(40) + '\n\n';
+    patients.forEach((p, i) => {
+      text += 'Patient ' + (i+1) + ': ' + p.id + (p.room ? ' | Room: ' + p.room : '') + '\n';
+      p.codes.forEach(c => { text += '  • ' + c.code + ' — ' + c.desc + '\n'; });
+      if (p.notes) text += '  Notes: ' + p.notes + '\n';
+      text += '\n';
+    });
+    navigator.clipboard.writeText(text).then(() => showToast('✓ Copied! Paste into Project Concert'));
+  }
+ 
+  function exportCSV() {
+    if (!patients.length) { showToast('No patients to export'); return; }
+    const dateStr = today.toISOString().split('T')[0];
+    let csv = 'Date,Patient ID,Room,ICD-10 Code,Description,Notes\n';
+    patients.forEach(p => {
+      p.codes.forEach(c => {
+        csv += '"' + dateStr + '","' + p.id + '","' + p.room + '","' + c.code + '","' + c.desc + '","' + p.notes + '"\n';
+      });
+    });
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'rotation-icd10-' + dateStr + '.csv';
+    a.click();
+    showToast('✓ CSV downloaded');
+  }
+ 
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+</script>
+</body>
+</html>
